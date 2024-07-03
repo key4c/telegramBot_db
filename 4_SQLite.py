@@ -56,5 +56,23 @@ def user_pass(message, name):
     markup.add(telebot.types.InlineKeyboardButton('Список пользователей', callback_data='users'))
     bot.send_message(message.chat.id, 'Ты успешно зарегистрирован!', reply_markup=markup)
 
+
+@bot.callback_query_handler(func=lambda call: call.data == 'users')
+def callback(call):
+    conn = sqlite3.connect('citizen.db')  
+    cur = conn.cursor() 
+
+    cur.execute('SELECT * FROM users')
+    users = cur.fetchall()  
+    info = ''
+    for el in users:
+        info += f'Имя: {el[1]}, пароль: {el[2]}\n'
+
+    cur.close()  
+    conn.close()
+
+    bot.send_message(call.message.chat.id, info)
+
+
 # Запускаем бот в режиме непрерывного опроса
 bot.polling(non_stop=True)
