@@ -10,6 +10,7 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
+name = None
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -35,7 +36,26 @@ def start(message):
 
 # Функция для обработки имени пользователя
 def user_name(message):
-    pass  # Заглушка, здесь будет логика для обработки имени пользователя
+    global name
+    name = message.text.strip()
+    bot.send_message(message.chat.id, 'Теперь введи свой пароль.')
+    bot.register_next_step_handler(message, user_pass, name)
+
+def user_pass(message, name):
+    password = message.text.strip()
+
+    conn = sqlite3.connect('citizen.db')  
+    cur = conn.cursor() 
+
+    # Используем параметризованный запрос для предотвращения SQL-инъекций
+    cur.execute('INSERT INTO users (name, pass) VALUES (?, ?)', (name, password))
+    conn.commit()  
+    cur.close()  
+    conn.close()
+
+    bot.send_message(message.chat.id, 'Ты успешно зарегистрирован!')
+    
+
 
 # Запускаем бот в режиме непрерывного опроса
 bot.polling(non_stop=True)
