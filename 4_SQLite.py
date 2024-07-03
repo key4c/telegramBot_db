@@ -10,7 +10,6 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-name = None
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -36,7 +35,6 @@ def start(message):
 
 # Функция для обработки имени пользователя
 def user_name(message):
-    global name
     name = message.text.strip()
     bot.send_message(message.chat.id, 'Теперь введи свой пароль.')
     bot.register_next_step_handler(message, user_pass, name)
@@ -53,9 +51,10 @@ def user_pass(message, name):
     cur.close()  
     conn.close()
 
-    bot.send_message(message.chat.id, 'Ты успешно зарегистрирован!')
     
-
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.add(telebot.types.InlineKeyboardButton('Список пользователей', callback_data='users'))
+    bot.send_message(message.chat.id, 'Ты успешно зарегистрирован!', reply_markup=markup)
 
 # Запускаем бот в режиме непрерывного опроса
 bot.polling(non_stop=True)
